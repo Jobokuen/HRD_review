@@ -9,6 +9,11 @@
 
 #include <iostream>
 #include <fstream>      // std::ofstream
+#include <cstring>
+#include <cstdio>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 #include "DHT22.h"
 
 #define DHT_PIN     0                   // WiringPi 0 = BCM 17 = connector pin 11
@@ -16,10 +21,10 @@
 int main( void ) {
     //socket init
     int sock = 0;
-    struct sockaddr_in serv_addr;
-    const char* hello = "Hello from client";
+    struct sockaddr_in  serv_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(8080);
+    char buffer[50];
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         std::cerr << "Socket creation error" << std::endl;
@@ -47,8 +52,10 @@ int main( void ) {
     while(1){
         MySensor->Fetch();
         std::cout << "Temp : " << MySensor->Temp  << " °C  Humidity : " << MySensor->Hum << " %" << std::endl;
-        send(sock, MySensor->Temp, strlen(MySensor->Temp), 0);
-        send(sock, MySensor->Hum, strlen(MySensor->Hum), 0);
+        sprintf(buffer,"%f",MySensor->Temp);
+        send(sock, buffer, strlen(buffer), 0);
+        sprintf(buffer,"%f",MySensor->Hum);
+        send(sock, buffer, strlen(buffer), 0);
         delay(1000);
         t++;
     }
